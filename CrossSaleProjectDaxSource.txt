@@ -1,0 +1,74 @@
+1.Calculated Table
+
+
+Basket = 
+FILTER(CROSSJOIN(
+        SELECTCOLUMNS(VALUES(Psroducts[ProductName]),"Product 1",Products[ProductName]),
+ 	SELECTCOLUMNS(VALUES(Products[ProductName]),"Product 2",Products[ProductName])),
+        [Product 1]> [Product 2])
+
+2.	Calculate Column
+
+
+Support Basket = 
+    VAR Product1 = Basket[Product 1]
+    VAR Product2 = Basket[Product 2]
+    VAR ListInvoiceHasProduct1 =
+        SELECTCOLUMNS(
+            FILTER('Sales', RELATED(Products[ProductName]) Product1),"Invoice1",Sales[OrderNumber])
+    VAR ListInvoiceHasProduct2 =
+        SELECTCOLUMNS(
+            FILTER('Sales', RELATED(Products[ProductName]) Product2),"Invoice2",Sales[OrderNumber])
+    VAR ListProductHave2Product =
+        INTERSECT(ListInvoiceHasProduct1,ListInvoiceHasProduct2)
+    RETURN
+        COUNTROWS(ListProductHave2Product)/DISTINCTCOUNT(Sales[OrderNumber])
+
+Confidence1 = 
+    	VAR Product1 = Basket[Product 1]
+   	VAR ToTalTransaction = DISTINCTCOUNT(Sales[OrderNumber])
+	VAR NoInvoiceHasPd1 = COUNTROWS(FILTER(Sales, RELATED(Products[ProductName]) = Product1))
+    	VAR PProduct1 = NoInvoiceHasPd1/ToTalTransaction
+    	RETURN
+        	Basket[Support Basket]/PProduct1
+
+
+Confidence2 = 
+    	VAR Product2 = Basket[Product 2]
+    	VAR ToTalTransaction = DISTINCTCOUNT(Sales[OrderNumber])
+	VAR NoInvoiceHasPd2 = COUNTROWS(FILTER(Sales, RELATED(Products[ProductName]) = Product2))
+    	VAR PProduct2 = NoInvoiceHasPd2/ToTalTransaction
+    	RETURN
+        	Basket[Support Basket]/PProduct2
+
+Lift = 
+    	VAR TotalTransaction = DISTINCTCOUNT(Sales[OrderNumber])
+    	VAR Product1 = Basket[Product 1]
+	VAR NoInvoiceHasPd1 = COUNTROWS(FILTER(Sales, RELATED(Products[ProductName]) = Product1))
+    	VAR PProduct1 = NoInvoiceHasPd1/ToTalTransaction
+    	VAR Product2 = Basket[Product 2]
+	VAR NoInvoiceHasPd2 = COUNTROWS(FILTER(Sales, RELATED(Products[ProductName]) = Product2))
+    	VAR PProduct2 = NoInvoiceHasPd2/ToTalTransaction
+    	RETURN
+        	Basket[Support Basket]/(PProduct1+PProduct2)*100
+
+
+Product Groups =  [Product 1]&" & "&Basket[Product 2]
+
+
+3.	Measure
+
+ToTalAmount = SUM(Sales[Revenue])
+
+ToTalProductCost = SUM(Sales[ProductCost]) 
+
+ToTalQuantity = SUM(Sales[OrderQuantity])
+
+
+
+    
+
+
+
+
+
